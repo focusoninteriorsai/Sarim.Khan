@@ -60,12 +60,26 @@ const pages = fs.readdirSync(root).filter(file => file.endsWith(".html"))
     await page.waitForFunction(() => document.getElementById("hero-title").classList.contains("is-visible"));
     console.log("PASS: stroke animation, two-second lifecycle, and reveal sequencing");
 
-    // Every root page and nested case study gets the same intro and correct links.
+    // The homepage intro must run again on a refresh; it is not session-limited.
+    await page.reload({ waitUntil: "domcontentloaded" });
+    assert.equal(await page.locator("#site-loader").getAttribute("data-duration"), "2000");
+    await page.getByRole("button", { name: "Skip intro" }).click();
+    assert.equal(await page.locator("#site-loader").count(), 0);
+    console.log("PASS: homepage intro runs on first visit and refresh");
+
+    // Only the homepage gets the intro; every page still has correct contact links.
     for (const file of pages) {
       await page.goto(base + "/" + file, { waitUntil: "domcontentloaded" });
-      assert(await page.locator("#site-loader").isVisible(), file + " must show the intro");
-      await page.getByRole("button", { name: "Skip intro" }).click();
-      assert.equal(await page.locator("#site-loader").count(), 0);
+      const isHomepage = file === "index.html";
+      assert.equal(await page.locator("#site-loader").count(), Number(isHomepage),
+        file + " intro should be present only on the homepage");
+      if (isHomepage) {
+        assert(await page.locator("#site-loader").isVisible(), file + " must show the intro");
+        await page.getByRole("button", { name: "Skip intro" }).click();
+        assert.equal(await page.locator("#site-loader").count(), 0);
+      } else {
+        assert(await page.locator("main").isVisible(), file + " should display immediately");
+      }
       const calls = await page.locator('a[href^="tel:"]').evaluateAll(links => links.map(link => link.getAttribute("href")));
       const chats = await page.locator('a[href*="wa.me/"]').evaluateAll(links => links.map(link => link.getAttribute("href")));
       assert(calls.length && calls.every(href => href === "tel:+919005564240"), file);
@@ -73,20 +87,23 @@ const pages = fs.readdirSync(root).filter(file => file.endsWith(".html"))
     }
     assert.deepEqual(errors, []);
     assert.deepEqual(brokenResources, []);
-    console.log("PASS: all " + pages.length + " pages, contact links, and skip control");
+    console.log("PASS: all " + pages.length + " pages, homepage-only intro, and contact links");
 
-    await page.goto(base + "/about.html", { waitUntil: "domcontentloaded" });
+    await page.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
     await page.keyboard.press("Escape");
     assert.equal(await page.locator("#site-loader").count(), 0);
     assert.equal(await page.evaluate(() => document.activeElement.id), "main");
-    await page.goto(base + "/about.html", { waitUntil: "domcontentloaded" });
+    await page.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
     await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: true })));
     assert.equal(await page.locator("#site-loader").count(), 0);
-    console.log("PASS: keyboard skip and back/forward-cache cleanup");
+    console.log("PASS: homepage keyboard skip and back/forward-cache cleanup");
 
     const reduced = await browser.newContext({ reducedMotion: "reduce" });
     const accessible = await reduced.newPage();
     await reduced.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(base).origin });
+    await accessible.goto(base + "/index.html", { waitUntil: "domcontentloaded" });
+    assert.equal(await accessible.locator("#site-loader").count(), 0);
+    assert(await accessible.locator("#hero-title").isVisible());
     await accessible.goto(base + "/contact.html", { waitUntil: "domcontentloaded" });
     assert.equal(await accessible.locator("#site-loader").count(), 0);
     await accessible.getByRole("button", { name: "Copy Sarim Khan's phone number" }).click();
