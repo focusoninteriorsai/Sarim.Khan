@@ -1,81 +1,67 @@
-# Sarim Khan — Project Director · Personal Branding Portfolio
+# Sarim Khan — Project Director · Portfolio
 
-Premium **personal branding portfolio** of **Sarim Khan, Project Director** at
-**FocusOn Interior Decorators Pvt. Ltd.** — a PAN-India turnkey commercial
-interior fit-out company (₹40 Cr → projected ₹100 Cr). This is Sarim's
-individual professional portfolio (clients & projects he has directed) — not
-the company website.
+A complete, static, responsive personal portfolio for **Sarim Khan, Project Director** at
+**FocusOn Interior Decorators Pvt. Ltd.** — plain HTML, CSS and a small amount of vanilla
+JavaScript. No framework, no build step, no backend.
 
-Built with **Next.js 14 (App Router) · TypeScript · Tailwind CSS · Framer Motion**.
-Light, PMC-grade design system (warm ivory, deep navy `#111C34`, restrained
-metallic gold `#B8862F`; Fraunces display serif + Inter).
+- **Theme:** blue · mid-yellow · white, Astra-inspired card-based layout
+- **Fonts:** Plus Jakarta Sans (headings) and Inter (body), self-hosted in `assets/fonts/`
+- **Speed:** no external requests, lazy-loaded images, transform/opacity-only animation,
+  reduced-motion support
 
 ## Pages
 
-| Route | Content |
+| File | Content |
 | --- | --- |
-| `/` | Hero, animated career stats, featured engagements, about teaser, client wall, CTA |
-| `/about` | Bio, C.Q.E.T. operating standard, education, certifications (placeholder grid) |
-| `/experience` | Career timeline + FocusOn company snapshot + turnover growth chart |
-| `/projects` | Full filterable / sortable project grid (value, area, vertical) |
-| `/projects/[slug]` | Case-study page per engagement (26 routes, SSG) |
-| `/expertise` | 12 core competencies, technical toolkit, 7-stage delivery methodology |
-| `/clients` | Client roster by vertical with **original brand logos** (grayscale → full-colour hover), recognition strip, growth chart |
-| `/gallery` | Real on-site project photography + delivery environments, filterable, lightbox |
-| `/media` | Official portraits, profile links, press coverage |
-| `/contact` | Email (click-to-copy), phone, LinkedIn, Delhi-NCR presence — no form |
+| `index.html` | Home: hero, career stats, featured engagements, about teaser, C.Q.E.T. standard, client marquee |
+| `about.html` | Bio, toolkit, C.Q.E.T. operating standard, education, certifications |
+| `experience.html` | Career timeline, company snapshot, turnover growth chart |
+| `projects.html` | Filterable, searchable and sortable project grid (vertical, value, area) |
+| `projects/<client>.html` | 26 case-study pages with narrative, scope, photography and prev/next navigation |
+| `expertise.html` | 12 core competencies, technical toolkit, 7-stage delivery methodology |
+| `clients.html` | Client roster by vertical with original brand logos, recognition, growth chart |
+| `gallery.html` | Project photography, filterable by project, with lightbox |
+| `media.html` | Official portraits (lightbox), profile links, press coverage |
+| `contact.html` | Call, WhatsApp, email (click-to-copy), LinkedIn and location |
+| `404.html` | Not-found page |
 
-SEO: per-page metadata, OpenGraph + `opengraph-image`, `sitemap.xml`,
-`robots.txt`, `Person` JSON-LD, SK monogram favicon + apple-touch-icon.
+## Structure
 
-## Content editing
+```
+index.html … contact.html, 404.html
+projects/                 case-study pages (one per engagement)
+assets/css/style.css      design system and responsive rules
+assets/js/main.js         header, menu, reveal, counters, filters, lightbox, copy
+assets/fonts/             self-hosted woff2 fonts
+assets/images/            portraits, project photography, icons, OG image
+assets/logos/             client brand logos
+sitemap.xml, robots.txt   SEO
+Sarim Photos/             original full-resolution source photos (not used by the site)
+```
 
-All content lives in typed data files — no JSX edits needed:
+## Editing content
 
-- `data/site.ts` — name, contacts, nav, stats
-- `data/projects.ts` — every engagement (area, value, vertical, narrative, images)
-- `data/clients.ts`, `data/gallery.ts`, `data/media.ts`, `data/expertise.ts`, `data/experience.ts`
+Each page is plain HTML. To change text, open the relevant `.html` file and edit it directly.
+Project pages follow the same markup, so copy an existing file in `projects/` to add one, then
+link it from `projects.html` and `index.html` (if featured) and add it to `sitemap.xml`.
 
-Images in `public/images/` (`sarim/` portraits, `projects/` photography,
-`projects/verticals/` representative delivery environments).
-Real FocusOn project photos were extracted from the company's public media
-library (`focusoninteriors.com`) via `scripts/fetch_assets.py` usage notes;
+## Preview locally
 
-## Brand logos
-
-Every client/company shown carries its **original brand logo** — no text
-approximations:
-
-- Files live in `public/logos/` (PNG, trimmed + height-normalized; a handful of
-  iconic marks are SVG wordmarks tinted to official brand colours).
-- `data/clients.ts` → `CLIENT_LOGOS` maps each roster client to its logo;
-  `CLIENT_ALIASES` maps project client strings (e.g. "KPMG — Advant Tower")
-  to their brand.
-- Rendered via `components/ClientLogo.tsx` (used by the clients grid,
-  home logo wall, project cards and case-study heroes) with a
-  grayscale → full-colour + zoom hover effect.
-resume PDF is regenerated with `python scripts/make_resume.py`.
-
-## Deploy on GitHub Pages (No Vercel · No Backend Server Required)
-
-This project is configured as a 100% static frontend portfolio using Next.js Static Export (`output: "export"`).
-
-1. Push this repository to GitHub.
-2. In your GitHub repository: go to **Settings → Pages** and set **Source** to **GitHub Actions** (or deploy the `/out` directory).
-3. In GitHub Actions or Pages settings, select standard Next.js Static Export deployment, or run `npm run build` locally/in CI which generates all static HTML/CSS/JS files directly into the `/out` folder.
-4. (Optional) Configure custom domain or set environment variable `NEXT_PUBLIC_SITE_URL` if needed. Defaults to `https://roushan62.github.io/Sarim-Khan` when unset.
-
-No server, API backend, or Vercel account is required. Everything runs statically from GitHub.
-
-## Scripts (for contributors running locally)
+The site uses relative paths, so it works from any folder.
 
 ```bash
-npm install
-npm run dev      # local preview
-npm run build    # production build
+python3 -m http.server 8080    # then open http://localhost:8080
 ```
+
+## Deploy on GitHub Pages
+
+1. Push this repository to GitHub.
+2. Go to **Settings → Pages**, set **Source** to *Deploy from a branch*, choose `main` and `/ (root)`.
+3. The site is served at `https://roushan62.github.io/Sarim-Khan/`. The `.nojekyll` file makes
+   GitHub Pages serve every file as-is.
+
+No build step, server, or API key is required.
 
 ---
 
-© Sarim Khan · Project Director, FocusOn Interior Decorators Pvt. Ltd.
-Site built for professional portfolio purposes.
+© 2026 Sarim Khan · Project Director, FocusOn Interior Decorators Pvt. Ltd.

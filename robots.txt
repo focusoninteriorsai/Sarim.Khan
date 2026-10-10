@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://roushan62.github.io/Sarim-Khan/sitemap.xml
