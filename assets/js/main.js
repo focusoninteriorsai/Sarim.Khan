@@ -17,29 +17,61 @@
   var toggle = $(".nav-toggle");
   var nav = $("#primary-nav");
 
-  function setMenu(open) {
-    if (!header || !toggle) return;
+  function setMenu(open, restoreFocus) {
+    if (!header || !toggle || !nav) return;
+    var wasOpen = header.classList.contains("is-open");
     header.classList.toggle("is-open", open);
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-    doc.body.style.overflow = open ? "hidden" : "";
+    doc.body.classList.toggle("menu-open", open);
+    if (open) {
+      var firstLink = $("a", nav);
+      if (firstLink) firstLink.focus({ preventScroll: true });
+    } else if (wasOpen && restoreFocus) {
+      toggle.focus({ preventScroll: true });
+    }
   }
 
   if (toggle) {
     toggle.addEventListener("click", function () {
-      setMenu(!header.classList.contains("is-open"));
+      setMenu(!header.classList.contains("is-open"), true);
     });
   }
   if (nav) {
     $$("a", nav).forEach(function (a) {
-      a.addEventListener("click", function () { setMenu(false); });
+      a.addEventListener("click", function () { setMenu(false, false); });
     });
   }
   doc.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") setMenu(false);
+    if (!header || !header.classList.contains("is-open")) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setMenu(false, true);
+    }
+    // Keep keyboard navigation inside the open mobile menu.
+    if (e.key === "Tab") {
+      var focusable = $$("a", nav).concat([toggle]);
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (e.shiftKey && doc.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && doc.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (focusable.indexOf(doc.activeElement) === -1) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+  doc.addEventListener("click", function (e) {
+    if (header && header.classList.contains("is-open") && !header.contains(e.target)) {
+      setMenu(false, true);
+    }
   });
   window.addEventListener("resize", function () {
-    if (window.innerWidth > 1240) setMenu(false);
+    if (window.innerWidth > 1240) setMenu(false, false);
   });
 
   /* ---------- Scroll-driven UI (throttled with rAF) ---------- */
@@ -74,61 +106,70 @@
     });
   }
 
-  /* ---------- Reveal on scroll ---------- */
-  var reveals = $$(".reveal");
-  if ("IntersectionObserver" in window && !reduceMotion) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) {
-          en.target.classList.add("is-visible");
-          en.target.dispatchEvent(new CustomEvent("revealed", { bubbles: false }));
-          io.unobserve(en.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
-    reveals.forEach(function (el) { io.observe(el); });
-    // Animated sections (growth bars, counters) observe the same way.
-    $$("[data-animate]").forEach(function (el) { io.observe(el); });
-  } else {
-    reveals.forEach(function (el) { el.classList.add("is-visible"); });
-    $$("[data-animate]").forEach(function (el) { el.classList.add("is-visible"); });
+  /* Start page motion after the intro, not behind its overlay. */
+  function initPageAnimations() {
+    /* ---------- Reveal on scroll ---------- */
+    var reveals = $$(".reveal");
+    if ("IntersectionObserver" in window && !reduceMotion) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            en.target.classList.add("is-visible");
+            en.target.dispatchEvent(new CustomEvent("revealed", { bubbles: false }));
+            io.unobserve(en.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+      reveals.forEach(function (el) { io.observe(el); });
+      // Animated sections (growth bars, counters) observe the same way.
+      $$("[data-animate]").forEach(function (el) { io.observe(el); });
+    } else {
+      reveals.forEach(function (el) { el.classList.add("is-visible"); });
+      $$("[data-animate]").forEach(function (el) { el.classList.add("is-visible"); });
+    }
+
+    /* ---------- Count-up numbers ---------- */
+    function formatNumber(n, indian) {
+      var rounded = Math.round(n);
+      return indian ? rounded.toLocaleString("en-IN") : rounded.toLocaleString("en-US");
+    }
+    function countUp(el) {
+      var target = parseFloat(el.getAttribute("data-count")) || 0;
+      var indian = el.hasAttribute("data-indian");
+      if (reduceMotion || !("IntersectionObserver" in window)) {
+        el.textContent = formatNumber(target, indian);
+        return;
+      }
+      var duration = 1600;
+      var start = null;
+      function step(ts) {
+        if (start === null) start = ts;
+        var t = Math.min(1, (ts - start) / duration);
+        var eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = formatNumber(target * eased, indian);
+        if (t < 1) window.requestAnimationFrame(step);
+      }
+      window.requestAnimationFrame(step);
+    }
+    var counters = $$("[data-count]");
+    if ("IntersectionObserver" in window && counters.length && !reduceMotion) {
+      counters.forEach(function (el) { el.textContent = "0"; });
+      var cio = new IntersectionObserver(function (entries, obs) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            countUp(en.target);
+            obs.unobserve(en.target);
+          }
+        });
+      }, { threshold: 0.6 });
+      counters.forEach(function (el) { cio.observe(el); });
+    }
   }
 
-  /* ---------- Count-up numbers ---------- */
-  function formatNumber(n, indian) {
-    var rounded = Math.round(n);
-    return indian ? rounded.toLocaleString("en-IN") : rounded.toLocaleString("en-US");
-  }
-  function countUp(el) {
-    var target = parseFloat(el.getAttribute("data-count")) || 0;
-    var indian = el.hasAttribute("data-indian");
-    if (reduceMotion || !("IntersectionObserver" in window)) {
-      el.textContent = formatNumber(target, indian);
-      return;
-    }
-    var duration = 1600;
-    var start = null;
-    function step(ts) {
-      if (start === null) start = ts;
-      var t = Math.min(1, (ts - start) / duration);
-      var eased = 1 - Math.pow(1 - t, 3);
-      el.textContent = formatNumber(target * eased, indian);
-      if (t < 1) window.requestAnimationFrame(step);
-    }
-    window.requestAnimationFrame(step);
-  }
-  var counters = $$("[data-count]");
-  if ("IntersectionObserver" in window && counters.length && !reduceMotion) {
-    counters.forEach(function (el) { el.textContent = "0"; });
-    var cio = new IntersectionObserver(function (entries, obs) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) {
-          countUp(en.target);
-          obs.unobserve(en.target);
-        }
-      });
-    }, { threshold: 0.6 });
-    counters.forEach(function (el) { cio.observe(el); });
+  if (root.classList.contains("site-loading")) {
+    doc.addEventListener("portfolio:ready", initPageAnimations, { once: true });
+  } else {
+    initPageAnimations();
   }
 
   /* ---------- Hero: subtle 3D tilt (pointer devices only) ---------- */
