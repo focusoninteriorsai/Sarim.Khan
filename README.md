@@ -4,10 +4,12 @@ A complete, static, responsive personal portfolio for **Sarim Khan, Project Dire
 **FocusOn Interior Decorators Pvt. Ltd.** — plain HTML, CSS and a small amount of vanilla
 JavaScript. No framework, no build step, no backend.
 
-- **Theme:** blue · mid-yellow · white, Astra-inspired card-based layout
+- **Theme:** refined navy · gold · white, editorial hero and responsive card-based layout
 - **Fonts:** Plus Jakarta Sans (headings) and Inter (body), self-hosted in `assets/fonts/`
-- **Speed:** no external requests, lazy-loaded images, transform/opacity-only animation,
-  reduced-motion support
+- **Contact:** **+91 90055 64240**; every call link, WhatsApp link and Person schema uses the same corrected number
+- **Welcome:** a two-second, Apple “hello”-inspired SVG handwriting intro spelling **Sarim Khan**, shared across all 36 pages
+- **Accessibility:** skip intro / Escape, reduced-motion bypass, keyboard-friendly mobile menu and no-JavaScript navigation
+- **Speed:** no external runtime requests or dependencies, lazy-loaded images and lightweight animation
 
 ## Pages
 
@@ -31,6 +33,8 @@ JavaScript. No framework, no build step, no backend.
 index.html … contact.html, 404.html
 projects/                 case-study pages (one per engagement)
 assets/css/style.css      design system and responsive rules
+assets/css/loader.css     handwritten intro styling and stroke animations
+assets/js/loader.js       independent two-second intro and cleanup
 assets/js/main.js         header, menu, reveal, counters, filters, lightbox, copy
 assets/fonts/             self-hosted woff2 fonts
 assets/images/            portraits, project photography, icons, OG image
@@ -44,6 +48,53 @@ Sarim Photos/             original full-resolution source photos (not used by th
 Each page is plain HTML. To change text, open the relevant `.html` file and edit it directly.
 Project pages follow the same markup, so copy an existing file in `projects/` to add one, then
 link it from `projects.html` and `index.html` (if featured) and add it to `sitemap.xml`.
+
+## Contact and welcome intro
+
+The current number is **+91 90055 64240**:
+
+- Call: `tel:+919005564240`
+- WhatsApp: `https://wa.me/919005564240`
+- The homepage Person schema uses `+919005564240` as well.
+
+Contact details live in the static HTML, so future number changes must include all root
+pages and nested case studies. The regression checks below help catch missed links.
+
+`loader.js` runs at the start of each page's body. Its inline SVG draws the pen strokes
+of “Sarim Khan” without downloading a handwriting font or image. The intro lasts
+**2,000 ms total**, including a **260 ms fade-out**; it does not wait for `window.load`
+or add another two-second delay after assets finish loading. Page reveals and counters
+start when the intro releases the page, rather than animating behind it.
+
+Visitors can skip with the button or Escape. Reduced-motion visitors go straight to
+the content. Without JavaScript, the site and mobile navigation remain available.
+The intro cleans up independently of `main.js` and on page hide, so browser history
+navigation cannot restore a frozen overlay. No session-storage restriction is used:
+a normal page load or reload shows the intro again.
+
+## Checks
+
+Static checks use only Python's standard library:
+
+```bash
+python3 -m unittest discover -s tests -v
+node --check assets/js/loader.js
+node --check assets/js/main.js
+```
+
+Optional browser checks cover real intro timing, all 36 pages, clipboard, mobile
+keyboard navigation, reduced motion, script failure, filters, sorting and lightbox.
+With the preview server running, install Playwright in the ignored scratch directory:
+
+```bash
+npm install --prefix .cache/browser-tools --no-audit --no-fund playwright
+node .cache/browser-tools/node_modules/playwright/cli.js install chromium
+NODE_PATH=.cache/browser-tools/node_modules node tests/browser.cjs
+```
+
+Set `PORTFOLIO_URL` to test a different server (default: `http://127.0.0.1:8080`).
+Set `CHROMIUM_EXECUTABLE_PATH` if using an existing Chromium executable.
+These test dependencies are optional; the deployed site still has no build step.
 
 ## Preview locally
 

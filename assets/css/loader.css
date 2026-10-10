@@ -1,0 +1,159 @@
+/* A quiet, handwritten welcome. The intro's complete lifecycle is 2 seconds. */
+html { scrollbar-gutter: stable; }
+html.site-loading { overflow: hidden; }
+.site-loading body { overflow: hidden; }
+/* Keep the original layout, but prevent hidden content being focused or read. */
+.site-loading body > :not(.site-loader):not(script) { visibility: hidden; }
+.site-loading .float-card,
+.site-loading .marquee-track { animation-play-state: paused; }
+
+.site-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(24px, 4vw, 56px);
+  color: #0a2459;
+  background:
+    radial-gradient(ellipse at 22% 35%, rgba(199, 219, 249, 0.35), transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(242, 219, 170, 0.28), transparent 48%),
+    #fafbf9;
+  opacity: 1;
+  transition: opacity 260ms ease;
+  isolation: isolate;
+}
+.site-loader.is-leaving { opacity: 0; pointer-events: none; }
+.site-loader__masthead,
+.site-loader__footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.site-loader__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.site-loader__monogram {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(10, 36, 89, 0.16);
+  border-radius: 10px;
+  font-size: 12px;
+  letter-spacing: -0.04em;
+}
+.site-loader__location,
+.site-loader__footer > span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #66738b;
+}
+.site-loader__center {
+  align-self: center;
+  justify-self: center;
+  width: min(100%, 740px);
+  text-align: center;
+  padding: 20px 0 36px;
+}
+.site-loader__eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #7b879b;
+  margin: 0 0 14px;
+  animation: intro-appear 400ms ease both;
+}
+.site-loader__signature { width: 100%; height: auto; overflow: visible; }
+.site-loader__signature path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: signature-write var(--duration) linear var(--delay) both;
+}
+.site-loader__signature .site-loader__flourish { stroke-width: 2; }
+.site-loader__role {
+  margin: 10px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #53657e;
+  animation: intro-appear 400ms ease 1000ms both;
+}
+.site-loader__role span { margin: 0 10px; color: #bd8b37; }
+.site-loader__track {
+  width: 100px;
+  height: 2px;
+  margin: 30px auto 0;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #e1e6ec;
+}
+.site-loader__track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #3977d5, #bd8b37);
+  transform-origin: left;
+  animation: intro-progress 1740ms linear both;
+}
+.site-loader__skip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #dce2e9;
+  border-radius: 999px;
+  background: transparent;
+  color: #53657e;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 150ms ease, color 150ms ease;
+}
+.site-loader__skip:hover { background: #fff; color: #0a2459; }
+.site-loader__skip svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+@keyframes signature-write {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  1% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes intro-appear {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes intro-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (max-width: 600px) {
+  .site-loader { padding: 24px 20px; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .site-loader__location { display: none; }
+  .site-loader__center { width: 100%; padding-bottom: 40px; }
+  .site-loader__eyebrow { font-size: 9px; letter-spacing: 0.23em; }
+  .site-loader__role { font-size: 9px; letter-spacing: 0.1em; }
+  .site-loader__role span { margin: 0 4px; }
+  .site-loader__footer > span { font-size: 9px; letter-spacing: 0.08em; max-width: 160px; }
+  .site-loader__skip { padding-inline: 12px; gap: 10px; }
+}
+
+/* JS skips the intro altogether for this preference. This also covers changes
+   to the preference while an intro is already on screen. */
+@media (prefers-reduced-motion: reduce) {
+  .site-loader { display: none; transition: none; }
+  html.site-loading, .site-loading body { overflow: visible; }
+  .site-loading body > :not(.site-loader):not(script) { visibility: visible; }
+}
+@media print {
+  .site-loader { display: none !important; }
+  html.site-loading, .site-loading body { overflow: visible; }
+  .site-loading body > :not(.site-loader):not(script) { visibility: visible; }
+}
