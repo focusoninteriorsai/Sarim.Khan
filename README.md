@@ -7,7 +7,7 @@ JavaScript. No framework, no build step, no backend.
 - **Theme:** refined navy · gold · white, editorial hero and responsive card-based layout
 - **Fonts:** Plus Jakarta Sans (headings) and Inter (body), self-hosted in `assets/fonts/`
 - **Contact:** **+91 90055 64240**; every call link, WhatsApp link and Person schema uses the same corrected number
-- **Welcome:** a two-second, Apple “hello”-inspired SVG handwriting intro spelling **Sarim Khan**, shared across all 36 pages
+- **Welcome:** a two-second, Apple “hello”-inspired SVG handwriting intro spelling **Sarim Khan**, shown only on the homepage (including first visits and refreshes)
 - **Accessibility:** skip intro / Escape, reduced-motion bypass, keyboard-friendly mobile menu and no-JavaScript navigation
 - **Speed:** no external runtime requests or dependencies, lazy-loaded images and lightweight animation
 
@@ -49,7 +49,7 @@ Each page is plain HTML. To change text, open the relevant `.html` file and edit
 Project pages follow the same markup, so copy an existing file in `projects/` to add one, then
 link it from `projects.html` and `index.html` (if featured) and add it to `sitemap.xml`.
 
-## Contact and welcome intro
+## Contact and homepage intro
 
 The current number is **+91 90055 64240**:
 
@@ -60,17 +60,19 @@ The current number is **+91 90055 64240**:
 Contact details live in the static HTML, so future number changes must include all root
 pages and nested case studies. The regression checks below help catch missed links.
 
-`loader.js` runs at the start of each page's body. Its inline SVG draws the pen strokes
-of “Sarim Khan” without downloading a handwriting font or image. The intro lasts
+The welcome intro is loaded only by `index.html`; all other pages display immediately
+without loading its CSS or JavaScript. On a normal homepage visit—including a first visit
+or a refresh—`loader.js` runs at the start of the body. Its inline SVG draws the pen
+strokes of “Sarim Khan” without downloading a handwriting font or image. The intro lasts
 **2,000 ms total**, including a **260 ms fade-out**; it does not wait for `window.load`
-or add another two-second delay after assets finish loading. Page reveals and counters
-start when the intro releases the page, rather than animating behind it.
+or add another two-second delay after assets finish loading. Homepage reveals and
+counters start when the intro releases the page, rather than animating behind it.
 
 Visitors can skip with the button or Escape. Reduced-motion visitors go straight to
 the content. Without JavaScript, the site and mobile navigation remain available.
 The intro cleans up independently of `main.js` and on page hide, so browser history
 navigation cannot restore a frozen overlay. No session-storage restriction is used:
-a normal page load or reload shows the intro again.
+a normal homepage load or reload shows the intro again.
 
 ## Checks
 

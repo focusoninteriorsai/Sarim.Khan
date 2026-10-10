@@ -62,22 +62,27 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(person["telephone"], PHONE)
         self.assertEqual(person["name"], "Sarim Khan")
 
-    def test_intro_is_shared_and_runs_before_page_content(self):
+    def test_intro_is_loaded_only_on_homepage(self):
         for page in PAGES:
             with self.subTest(page=page.relative_to(ROOT)):
+                is_homepage = page == ROOT / "index.html"
                 prefix = "../" if page.parent.name == "projects" else ""
                 content = page.read_text()
                 parser = PageParser(content)
                 loaders = [a for tag, a in parser.elements if tag == "script"
                            and a.get("src", "").endswith("/loader.js")]
-                self.assertEqual(len(loaders), 1)
-                self.assertEqual(loaders[0]["src"], prefix + "assets/js/loader.js")
-                self.assertNotIn("defer", loaders[0])
-                self.assertNotIn("async", loaders[0])
-                self.assertRegex(content, r'<body[^>]*>\s*<script src="' +
-                                 re.escape(prefix + "assets/js/loader.js") + r'"></script>')
-                self.assertIn('<link rel="stylesheet" href="' + prefix +
-                              'assets/css/loader.css">', content)
+                loader_styles = [a for tag, a in parser.elements if tag == "link"
+                                 and a.get("href", "").endswith("/loader.css")]
+                self.assertEqual(len(loaders), int(is_homepage))
+                self.assertEqual(len(loader_styles), int(is_homepage))
+                if is_homepage:
+                    self.assertEqual(loaders[0]["src"], prefix + "assets/js/loader.js")
+                    self.assertNotIn("defer", loaders[0])
+                    self.assertNotIn("async", loaders[0])
+                    self.assertRegex(content, r'<body[^>]*>\s*<script src="' +
+                                     re.escape(prefix + "assets/js/loader.js") + r'"></script>')
+                    self.assertIn('<link rel="stylesheet" href="' + prefix +
+                                  'assets/css/loader.css">', content)
 
     def test_local_resources_and_page_links_resolve(self):
         for page in PAGES:
